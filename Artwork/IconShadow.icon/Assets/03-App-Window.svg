@@ -1,0 +1,13 @@
+<!-- Lucide app-window-mac, ISC License. See Artwork/ThirdParty/Lucide-LICENSE.txt. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <g transform="rotate(-10 512 464)">
+    <g transform="translate(392 344) scale(10)" fill="none" stroke="#334B66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+  <rect width="20" height="16" x="2" y="4" rx="2" />
+  <path d="M6 8h.01" />
+  <path d="M10 8h.01" />
+  <path d="M14 8h.01" />
+
+    </g>
+  </g>
+</svg>

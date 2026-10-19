@@ -1,0 +1,61 @@
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Swift Package Manager and Xcode build output
+.build/
+.swiftpm/
+/build/
+/dist/
+/release/
+/releases/
+DerivedData/
+*.xcarchive/
+*.xcresult/
+*.dSYM/
+*.dSYM.zip
+
+# Xcode per-user settings (keep project files and shared schemes)
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.hmap
+*.ipa
+
+# Distribution artifacts; artwork and ICNS source assets remain versionable
+*.app/
+*.dmg
+*.pkg
+/*.zip
+
+# Local environment, signing material and provisioning profiles
+.env
+.env.*
+!.env.example
+!.env.template
+*.local.xcconfig
+*.p12
+*.pfx
+*.p8
+*.pem
+*.key
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+*.keychain
+*.keychain-db
+
+# Python helper caches, local editors and temporary files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+*.swp
+*.swo
+*~
+*.log

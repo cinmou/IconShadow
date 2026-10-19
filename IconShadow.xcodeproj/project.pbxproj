@@ -1,0 +1,33 @@
+// !$*UTF8*$!
+{ archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+FB836F05E5124ABC47FA70C3 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/IconShadow/IconShadowApp.swift"; sourceTree = "<group>"; };
+2B572F22B56E67695B8086D4 = { isa = PBXBuildFile; fileRef = FB836F05E5124ABC47FA70C3; };
+135194D643B04195A0EB1299 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/IconShadowCore/IconExporter.swift"; sourceTree = "<group>"; };
+E44ECB53C950571B4A040D35 = { isa = PBXBuildFile; fileRef = 135194D643B04195A0EB1299; };
+3BF4F70ECE0A6E42B295AFF2 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/IconShadowCore/IconRenderer.swift"; sourceTree = "<group>"; };
+B31DA8D982A44974E06AC05A = { isa = PBXBuildFile; fileRef = 3BF4F70ECE0A6E42B295AFF2; };
+8B53A5A73310766E670AEEAE = { isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; name = IconShadow.icon; path = Artwork/IconShadow.icon; sourceTree = "<group>"; };
+5D393A4EEAFAAE7A7027F57C = { isa = PBXBuildFile; fileRef = 8B53A5A73310766E670AEEAE; };
+6115963FDF2E5F17EAAC9A84 = { isa = PBXFileReference; lastKnownFileType = text; name = Lucide-LICENSE.txt; path = Sources/IconShadow/Resources/ThirdParty/Lucide-LICENSE.txt; sourceTree = "<group>"; };
+F374A74DFF77123A5309C519 = { isa = PBXBuildFile; fileRef = 6115963FDF2E5F17EAAC9A84; };
+8475CA1D9950C41F9DBD6CD5 = { isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+87A7393B581F9A3D7948CFA4 = { isa = PBXBuildFile; fileRef = 8475CA1D9950C41F9DBD6CD5; };
+38A007151ABE87CC01A5B6E9 = { isa = PBXFileReference; explicitFileType = wrapper.application; path = "Icon Shadow.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+64292B1C2B2E13EAD8788FC8 = { isa = PBXGroup; children = (FB836F05E5124ABC47FA70C3,135194D643B04195A0EB1299,3BF4F70ECE0A6E42B295AFF2,8B53A5A73310766E670AEEAE,1877F3CB6E58176272997A08,6115963FDF2E5F17EAAC9A84,8475CA1D9950C41F9DBD6CD5,FBDC4F23F93125BBEEAE800C); sourceTree = "<group>"; };
+FBDC4F23F93125BBEEAE800C = { isa = PBXGroup; name = Products; children = (38A007151ABE87CC01A5B6E9); sourceTree = "<group>"; };
+BCE16DD0260827ECF338C787 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (2B572F22B56E67695B8086D4,E44ECB53C950571B4A040D35,B31DA8D982A44974E06AC05A); runOnlyForDeploymentPostprocessing = 0; };
+7561BFB015D8F536760CB671 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+792B43B074E6975FFAF20126 = { isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "Sources/IconShadow/Resources/en.lproj/Localizable.strings"; sourceTree = "<group>"; };
+408FA2295455B7FC181566B5 = { isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Sources/IconShadow/Resources/zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+1877F3CB6E58176272997A08 = { isa = PBXVariantGroup; children = (792B43B074E6975FFAF20126,408FA2295455B7FC181566B5); name = Localizable.strings; sourceTree = "<group>"; };
+3D63C6937ED43ADE4AE6DEDA = { isa = PBXBuildFile; fileRef = 1877F3CB6E58176272997A08; };
+0189424A5A60FED329FA868E = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (3D63C6937ED43ADE4AE6DEDA,5D393A4EEAFAAE7A7027F57C,F374A74DFF77123A5309C519,87A7393B581F9A3D7948CFA4); runOnlyForDeploymentPostprocessing = 0; };
+ED8772ADEC3A6C25161BC957 = { isa = XCBuildConfiguration; name = Debug; buildSettings = { SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 14.0; CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 6.0; SWIFT_STRICT_CONCURRENCY = complete; }; };
+4D8F54E7CBAF670D9F6C230D = { isa = XCBuildConfiguration; name = Debug; buildSettings = { PRODUCT_NAME = "Icon Shadow"; PRODUCT_BUNDLE_IDENTIFIER = "dev.cinmou.IconShadow"; INFOPLIST_FILE = Info.plist; ASSETCATALOG_COMPILER_APPICON_NAME = IconShadow; CODE_SIGN_STYLE = Automatic; CODE_SIGN_IDENTITY = "-"; ENABLE_APP_SANDBOX = NO; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; COMBINE_HIDPI_IMAGES = YES; }; };
+00F209874A1F7309F6DCEAA7 = { isa = XCBuildConfiguration; name = Release; buildSettings = { SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 14.0; CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 6.0; SWIFT_STRICT_CONCURRENCY = complete; }; };
+1A6EFC2CD0AF63DD14BE0438 = { isa = XCBuildConfiguration; name = Release; buildSettings = { PRODUCT_NAME = "Icon Shadow"; PRODUCT_BUNDLE_IDENTIFIER = "dev.cinmou.IconShadow"; INFOPLIST_FILE = Info.plist; ASSETCATALOG_COMPILER_APPICON_NAME = IconShadow; CODE_SIGN_STYLE = Automatic; CODE_SIGN_IDENTITY = "-"; ENABLE_APP_SANDBOX = NO; SWIFT_OPTIMIZATION_LEVEL = "-O"; COMBINE_HIDPI_IMAGES = YES; }; };
+640DC9EFD529235A8D9E2727 = { isa = XCConfigurationList; buildConfigurations = (ED8772ADEC3A6C25161BC957,00F209874A1F7309F6DCEAA7); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+976B52545947CA66FD9EF2A4 = { isa = XCConfigurationList; buildConfigurations = (4D8F54E7CBAF670D9F6C230D,1A6EFC2CD0AF63DD14BE0438); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+0E8A3AD980EC179856012B7E = { isa = PBXNativeTarget; buildConfigurationList = 976B52545947CA66FD9EF2A4; buildPhases = (BCE16DD0260827ECF338C787,7561BFB015D8F536760CB671,0189424A5A60FED329FA868E); buildRules = (); dependencies = (); name = IconShadow; productName = "Icon Shadow"; productReference = 38A007151ABE87CC01A5B6E9; productType = "com.apple.product-type.application"; };
+98F54143AB4E86B28C3AFEE0 = { isa = PBXProject; attributes = { LastUpgradeCheck = 2700; }; buildConfigurationList = 640DC9EFD529235A8D9E2727; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; knownRegions = (en, Base, "zh-Hans"); mainGroup = 64292B1C2B2E13EAD8788FC8; productRefGroup = FBDC4F23F93125BBEEAE800C; projectDirPath = ""; projectRoot = ""; targets = (0E8A3AD980EC179856012B7E); };
+}; rootObject = 98F54143AB4E86B28C3AFEE0; }

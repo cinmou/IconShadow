@@ -1,0 +1,64 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.65098,0.76471,0.86667,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "hidden" : true,
+          "image-name" : "03-App-Window.svg",
+          "name" : "03 App Window",
+          "position" : {
+            "scale" : 1.39,
+            "translation-in-points" : [
+              -46,
+              -52
+            ]
+          }
+        },
+        {
+          "glass" : true,
+          "image-name" : "01-Tile-Edge.svg",
+          "name" : "01 Tile Edge",
+          "position" : {
+            "scale" : 1.39,
+            "translation-in-points" : [
+              -46,
+              -127
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "02-Tile-Face.svg",
+          "name" : "02 Tile Face",
+          "position" : {
+            "scale" : 1.39,
+            "translation-in-points" : [
+              -46,
+              -127
+            ]
+          }
+        }
+      ],
+      "lighting" : "combined",
+      "name" : "Floating Tile",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.8
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.15
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
