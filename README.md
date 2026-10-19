@@ -7,6 +7,10 @@
 
 Drop in a PNG or ICNS, adjust its size and shadow, and export an ICNS ready to use in Finder. Icon Shadow runs locally and does not upload your artwork.
 
+<p align="center">
+  <img src="docs/screenshots/comparison-en.png" width="960" alt="Original and processed icons with live artwork and shadow controls">
+</p>
+
 ## Features
 
 - PNG and ICNS import, with drag and drop or a file picker.

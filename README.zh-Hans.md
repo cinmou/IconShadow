@@ -7,6 +7,10 @@
 
 拖入 PNG 或 ICNS，调整主体尺寸和阴影，再导出可用于 Finder 替换图标的 ICNS。所有图像处理都在本机完成，不会上传素材。
 
+<p align="center">
+  <img src="docs/screenshots/comparison-zh-Hans.png" width="960" alt="原始与处理后图标对比，以及实时图稿和阴影调整面板">
+</p>
+
 ## 功能
 
 - 通过拖放或文件选择器导入 PNG、ICNS。
