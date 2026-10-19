@@ -5,7 +5,7 @@
   <p>English · <a href="README.zh-Hans.md">简体中文</a></p>
 </div>
 
-Drop in a PNG or ICNS, adjust its size and shadow, and export an ICNS ready to use in Finder. Icon Shadow runs locally and does not upload your artwork.
+Drop in an image or a macOS application, adjust the icon’s size and shadow, and export an ICNS ready to use in Finder. Icon Shadow runs locally and does not upload your artwork.
 
 <p align="center">
   <img src="docs/screenshots/comparison-en.png" width="960" alt="Original and processed icons with live artwork and shadow controls">
@@ -13,7 +13,8 @@ Drop in a PNG or ICNS, adjust its size and shadow, and export an ICNS ready to u
 
 ## Features
 
-- PNG and ICNS import, with drag and drop or a file picker.
+- Import images or extract an application’s icon by dropping its `.app` bundle, or using the file picker.
+- Native image decoding: PNG, ICNS, JPEG, TIFF, HEIC, GIF, BMP, ICO, WebP and other Image I/O formats supported by your macOS version, plus native SVG/PDF rasterization.
 - Automatic transparent-edge trimming and proportional artwork scaling, measuring the body separately from faint exterior shadows.
 - Continuous-corner mask and alpha-based Gaussian shadow.
 - Live controls for scale, horizontal/vertical position, shadow opacity, blur and offset.
@@ -32,9 +33,13 @@ Open the release DMG and drag **Icon Shadow** into **Applications**. Launch it f
 
 ## Usage
 
-1. Drop a PNG or ICNS into the window, or choose **File → Open…** (`⌘O`).
+1. Drop an image or `.app` into the window, or choose **File → Open…** (`⌘O`).
 2. Use the default preset or adjust the artwork and shadow in the inspector.
-3. Click **Export ICNS** (`⌘E`). PNG export is available in the adjacent menu.
+3. Choose **Export PNG…** (`⇧⌘E`) or **Export ICNS…** (`⌘E`) at the bottom of the right-hand panel. Both formats are also available from the File menu.
+
+Click the moon/sun button in the toolbar to switch the preview background directly. Animated images use their first frame and PDFs use their first page. SVG/PDF artwork is rasterized to fit a 1024 px longest edge, preserving its proportions and transparency. Additional codecs, including AVIF and camera RAW, depend on the installed macOS decoders; raster inputs retain the 8192 px per-edge limit. Dropping an app reads its Finder icon without launching or modifying the app.
+
+Export uses the source filename with the selected extension. During slider dragging, a lighter preview keeps updates responsive; releasing the slider restores the full 1024 px preview, and exports always render at 1024 × 1024.
 
 To apply the result, select the exported ICNS in Finder and copy it. Open the target application's **Get Info** window, select the small icon in its upper-left corner, and paste.
 

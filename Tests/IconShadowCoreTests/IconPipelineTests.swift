@@ -83,6 +83,69 @@ final class IconPipelineTests: XCTestCase {
         XCTAssertEqual(bytes[(512 * masked.bytesPerRow) + 512 * 4 + 3], 255)
     }
 
+    func testNativeRasterFormatsAndOrientation() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let image = try IconRenderer.resized(fixture().image, to: 64)
+        let readable = Set(IconRenderer.supportedImageTypes.map(\.identifier))
+        let writable = Set(CGImageDestinationCopyTypeIdentifiers() as? [String] ?? [])
+        for id in ["public.jpeg", "public.tiff", "com.compuserve.gif", "com.microsoft.bmp", "public.jpeg-2000", "public.heic", "com.microsoft.ico"] {
+            guard readable.contains(id), writable.contains(id) else { continue }
+            let url = root.appendingPathComponent(UUID().uuidString) // Decode by content, not extension.
+            let dest = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, id as CFString, 1, nil))
+            CGImageDestinationAddImage(dest, image, nil)
+            XCTAssertTrue(CGImageDestinationFinalize(dest), id)
+            let source = try IconRenderer.load(url)
+            XCTAssertEqual(source.width, 64, id)
+            XCTAssertEqual(source.height, 64, id)
+            let result = try IconRenderer.render(source, settings: IconSettings())
+            XCTAssertEqual(result.width, 1024, id)
+        }
+        let jpeg = root.appendingPathComponent("rotated.jpg")
+        let dest = try XCTUnwrap(CGImageDestinationCreateWithURL(jpeg as CFURL, "public.jpeg" as CFString, 1, nil))
+        let wide = try XCTUnwrap(image.cropping(to: CGRect(x: 0, y: 0, width: 64, height: 32)))
+        CGImageDestinationAddImage(dest, wide, [kCGImagePropertyOrientation: 6] as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(dest))
+        let rotated = try IconRenderer.load(jpeg)
+        XCTAssertEqual(rotated.width, 32)
+        XCTAssertEqual(rotated.height, 64)
+    }
+
+    func testApplicationAndVectorImport() async throws {
+        try await MainActor.run {
+            let app = URL(fileURLWithPath: "/System/Applications/Calculator.app")
+            let source = try NativeIconImporter.load(app)
+            XCTAssertEqual(source.width, 1024)
+            XCTAssertEqual(source.height, 1024)
+            XCTAssertGreaterThan(source.artworkBounds.width, 700)
+            XCTAssertThrowsError(try NativeIconImporter.load(URL(fileURLWithPath: "/tmp/missing.app")))
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let svg = root.appendingPathComponent("artwork.svg")
+            try "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"100\"><rect width=\"200\" height=\"100\" fill=\"#2678ff\"/></svg>".write(to: svg, atomically: true, encoding: .utf8)
+            if NativeIconImporter.vectorTypes.contains(.svg) {
+                let vector = try NativeIconImporter.load(svg)
+                XCTAssertEqual(vector.width, 1024)
+                XCTAssertEqual(vector.height, 512)
+                XCTAssertEqual(vector.artworkBounds.width, 1024)
+            }
+            let pdf = root.appendingPathComponent("artwork.pdf")
+            var page = CGRect(x: 0, y: 0, width: 200, height: 100)
+            let context = try XCTUnwrap(CGContext(pdf as CFURL, mediaBox: &page, nil))
+            context.beginPDFPage(nil)
+            context.setFillColor(CGColor(gray: 0.5, alpha: 1)); context.fill(page)
+            context.endPDFPage(); context.closePDF()
+            let vector = try NativeIconImporter.load(pdf)
+            XCTAssertEqual(vector.width, 1024)
+            XCTAssertEqual(vector.height, 512)
+            // Finder drops application bundles as file URLs, using the same import route.
+            XCTAssertTrue(NativeIconImporter.handles(app))
+            XCTAssertTrue(NSItemProvider(contentsOf: app)!.hasItemConformingToTypeIdentifier("public.file-url"))
+        }
+    }
+
     func testFileDropURLDecoding() throws {
         let file = FileManager.default.temporaryDirectory.appendingPathComponent("IconShadow-drop-\(UUID().uuidString).png")
         try IconExporter.exportPNG(fixture().image, to: file)

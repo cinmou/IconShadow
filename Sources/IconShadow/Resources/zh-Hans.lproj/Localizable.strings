@@ -48,3 +48,10 @@
 "macOS 27" = "macOS 27";
 "Custom" = "自定义";
 "Both versions use the same measured static outline and shadow. Glass materials are already baked into your artwork." = "两代使用相同的静态轮廓与阴影参数。玻璃材质保留自原图。";
+"Switch to Light Background" = "切换为浅色背景";
+"Switch to Dark Background" = "切换为深色背景";
+"Image or App" = "图片或应用";
+"Drop an Image or App" = "拖入图片或应用";
+"Images or .app" = "图片或 .app 应用";
+"Open Image or App (⌘O)" = "打开图片或应用（⌘O）";
+"Choose a supported image or macOS application." = "请选择支持的图片或 macOS 应用。";

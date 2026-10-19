@@ -9,7 +9,7 @@ public enum IconError: LocalizedError {
     case invalidImage, emptyImage, oversizedImage, renderingFailed, exportFailed(String)
     public var errorDescription: String? {
         switch self {
-        case .invalidImage: String(localized: "Choose a valid PNG or ICNS file.")
+        case .invalidImage: String(localized: "Choose a supported image or macOS application.")
         case .emptyImage: String(localized: "This image is fully transparent.")
         case .oversizedImage: String(localized: "Use an image no larger than 8192 × 8192 pixels.")
         case .renderingFailed: String(localized: "Could not create the icon canvas.")
@@ -55,13 +55,22 @@ public struct IconSource: Sendable {
 
 public enum IconRenderer {
     public static let canvasSize = 1024
+    public static var supportedImageTypes: [UTType] {
+        (CGImageSourceCopyTypeIdentifiers() as? [String] ?? []).compactMap { UTType($0) }
+    }
+
     public static func load(_ url: URL) throws -> IconSource {
-        guard ["png", "icns"].contains(url.pathExtension.lowercased()),
-              let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { throw IconError.invalidImage }
+        guard let source = CGImageSourceCreateWithURL(url as CFURL,
+            [kCGImageSourceShouldCache: false] as CFDictionary),
+            let type = CGImageSourceGetType(source) as String? else { throw IconError.invalidImage }
         // ICNS contains multiple representations. Explicitly select the largest.
         let count = CGImageSourceGetCount(source)
         var bestIndex = 0, bestArea = 0
-        for index in 0..<count {
+        // Only icon containers and multipage TIFF use largest-representation selection.
+        // Animated GIF/WebP/APNG/HEIF inputs use their first frame.
+        let candidates = ["com.apple.icns", "com.microsoft.ico", "public.tiff"].contains(type) ? count : min(count, 1)
+        guard candidates > 0 else { throw IconError.invalidImage }
+        for index in 0..<candidates {
             let props = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any]
             let w = props?[kCGImagePropertyPixelWidth] as? Int ?? 0
             let h = props?[kCGImagePropertyPixelHeight] as? Int ?? 0

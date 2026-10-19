@@ -48,3 +48,10 @@
 "macOS 27" = "macOS 27";
 "Custom" = "Custom";
 "Both versions use the same measured static outline and shadow. Glass materials are already baked into your artwork." = "Both versions use the same measured static outline and shadow. Glass materials are already baked into your artwork.";
+"Switch to Light Background" = "Switch to Light Background";
+"Switch to Dark Background" = "Switch to Dark Background";
+"Image or App" = "Image or App";
+"Drop an Image or App" = "Drop an Image or App";
+"Images or .app" = "Images or .app";
+"Open Image or App (⌘O)" = "Open Image or App (⌘O)";
+"Choose a supported image or macOS application." = "Choose a supported image or macOS application.";

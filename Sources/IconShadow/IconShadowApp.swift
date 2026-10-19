@@ -20,7 +20,10 @@ struct IconShadowApp: App {
             CommandGroup(replacing: .newItem) {
                 Button("Open…", systemImage: "folder") { model.open() }.keyboardShortcut("o")
                 Button("Export ICNS…") { model.export(icns: true) }
-                    .keyboardShortcut("e").disabled(model.output == nil || model.busy)
+                    .keyboardShortcut("e").disabled(model.output == nil || model.busy || model.loading)
+                Button("Export PNG…") { model.export(icns: false) }
+                    .keyboardShortcut("e", modifiers: [.command, .shift])
+                    .disabled(model.output == nil || model.busy || model.loading)
             }
         }
     }
@@ -37,10 +40,11 @@ final class EditorModel {
     var loading = false
     var rendering = false
     var error: String?
-    var status = String(localized: "PNG or ICNS")
+    var status = String(localized: "Image or App")
     private var renderTask: Task<Void, Never>?
     private var loadID = UUID()
-    private var renderID = UUID()
+    private var renderRevision = 0
+    private var isAdjusting = false
 
     func applyPreset(_ value: IconPreset) {
         preset = value
@@ -54,7 +58,8 @@ final class EditorModel {
 
     func open() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.png, .icns]
+        panel.allowedContentTypes = IconRenderer.supportedImageTypes + NativeIconImporter.vectorTypes + [.applicationBundle]
+        panel.treatsFilePackagesAsDirectories = false
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
         if panel.runModal() == .OK, let url = panel.url { load(url) }
@@ -65,11 +70,16 @@ final class EditorModel {
         loading = true
         Task {
             do {
-                let loaded = try await Task.detached(priority: .userInitiated) {
-                    let access = url.startAccessingSecurityScopedResource()
-                    defer { if access { url.stopAccessingSecurityScopedResource() } }
-                    return try IconRenderer.load(url)
-                }.value
+                let loaded: IconSource
+                if NativeIconImporter.handles(url) {
+                    loaded = try NativeIconImporter.load(url)
+                } else {
+                    loaded = try await Task.detached(priority: .userInitiated) {
+                        let access = url.startAccessingSecurityScopedResource()
+                        defer { if access { url.stopAccessingSecurityScopedResource() } }
+                        return try IconRenderer.load(url)
+                    }.value
+                }
                 guard loadID == id else { return }
                 source = loaded; filename = url.deletingPathExtension().lastPathComponent
                 loading = false; output = nil
@@ -82,23 +92,40 @@ final class EditorModel {
         }
     }
 
+    func setAdjusting(_ value: Bool) {
+        guard isAdjusting != value else { return }
+        isAdjusting = value
+        updatePreview()
+    }
+
     func updatePreview() {
-        renderTask?.cancel()
-        let id = UUID(); renderID = id
-        guard let source else { return }
-        let current = settings
+        renderRevision += 1
+        guard source != nil, !loading, renderTask == nil else { return }
         rendering = true
+        // One in-flight render. Changes arriving during it are coalesced into the
+        // next snapshot, rather than spawning unstructured work for every event.
         renderTask = Task {
-            do {
-                try await Task.sleep(for: .milliseconds(35))
-                let image = try await Task.detached(priority: .userInitiated) {
-                    try IconRenderer.render(source, settings: current)
-                }.value
-                guard !Task.isCancelled, id == renderID else { return }
-                output = image; rendering = false
-            } catch is CancellationError { } catch {
-                guard id == renderID else { return }
-                rendering = false; self.error = error.localizedDescription
+            defer { renderTask = nil; rendering = false }
+            while let source, !loading {
+                let revision = renderRevision
+                let currentLoadID = loadID
+                let current = settings
+                let size = isAdjusting ? 512 : 1024
+                do {
+                    let image = try await Task.detached(priority: .userInitiated) {
+                        try autoreleasepool {
+                            try IconRenderer.render(source, settings: current, size: size)
+                        }
+                    }.value
+                    // Keep intermediate frames visible during dragging, but never
+                    // publish an old document after a different file is opened.
+                    if currentLoadID == loadID { output = image }
+                } catch {
+                    if currentLoadID == loadID, revision == renderRevision {
+                        self.error = error.localizedDescription
+                    }
+                }
+                if revision == renderRevision { break }
             }
         }
     }
@@ -107,7 +134,7 @@ final class EditorModel {
         guard let source else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = icns ? [.icns] : [.png]
-        panel.nameFieldStringValue = "\(filename)-shadow.\(icns ? "icns" : "png")"
+        panel.nameFieldStringValue = "\(filename).\(icns ? "icns" : "png")"
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
         let snapshot = settings
@@ -135,7 +162,6 @@ struct ContentView: View {
     @State private var darkBackground = false
     @State private var comparison = false
     @State private var targeted = false
-    @State private var showInspector = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -153,9 +179,9 @@ struct ContentView: View {
                         }.padding(20)
                     } else {
                         ContentUnavailableView {
-                            Label("Drop an Icon", systemImage: "square.dashed")
+                            Label("Drop an Image or App", systemImage: "square.dashed")
                         } description: {
-                            Text("PNG or ICNS")
+                            Text("Images or .app")
                         } actions: {
                             Button("Open…") { model.open() }.keyboardShortcut("o")
                         }
@@ -167,7 +193,11 @@ struct ContentView: View {
                     if model.loading {
                         ProgressView("Opening…").padding(20).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
                     }
-                }.clipped()
+                }
+                .clipped()
+                // The canvas has its own background independent of the window's
+                // appearance. Resolve semantic text/control colors in that scheme.
+                .environment(\.colorScheme, darkBackground ? .dark : .light)
             }
             Divider()
             HStack(spacing: 8) {
@@ -178,34 +208,29 @@ struct ContentView: View {
             }.font(.caption).foregroundStyle(.secondary).padding(.horizontal, 16).padding(.vertical, 8)
         }
         .navigationTitle("Icon Shadow")
-        .inspector(isPresented: $showInspector) {
+        .inspector(isPresented: .constant(true)) {
             inspector.inspectorColumnWidth(min: 280, ideal: 310, max: 350)
         }
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button("Open…", systemImage: "folder") { model.open() }
-                    .help("Open PNG or ICNS (⌘O)").disabled(model.loading)
+                    .help("Open Image or App (⌘O)").disabled(model.loading)
             }
-            ToolbarItemGroup {
+            ToolbarItem(placement: .primaryAction) {
                 Toggle(isOn: $comparison) { Label("Compare", systemImage: "rectangle.split.2x1") }
                     .help("Compare the original and processed icon").disabled(model.source == nil)
-                Menu {
-                    Picker("Preview Background", selection: $darkBackground) {
-                        Text("Light").tag(false)
-                        Text("Dark").tag(true)
-                    }
-                } label: { Label("Background", systemImage: darkBackground ? "moon" : "sun.max") }
-                    .help("Preview Background")
+                    .toggleStyle(.button)
+                    .labelStyle(.titleAndIcon)
             }
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button("Export ICNS") { model.export(icns: true) }
-                    .disabled(model.output == nil || model.busy || model.loading)
-                Menu {
-                    Button("Export PNG…") { model.export(icns: false) }
-                } label: { Label("Other Export Formats", systemImage: "ellipsis.circle") }
-                    .disabled(model.output == nil || model.busy || model.loading)
-                Button("Adjustments", systemImage: "sidebar.right") { showInspector.toggle() }
-                    .help("Show or hide adjustments")
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    darkBackground.toggle()
+                } label: {
+                    Label("Background", systemImage: darkBackground ? "sun.max" : "moon")
+                }
+                .labelStyle(.titleAndIcon)
+                .help(darkBackground ? "Switch to Light Background" : "Switch to Dark Background")
+                .accessibilityLabel(darkBackground ? Text("Switch to Light Background") : Text("Switch to Dark Background"))
             }
         }
         .onChange(of: model.settings) {
@@ -236,7 +261,7 @@ struct ContentView: View {
             Image(decorative: image, scale: 1).resizable().interpolation(.high).aspectRatio(contentMode: .fit)
                 .frame(width: edge, height: edge)
             if comparison {
-                Text(label).font(.caption).foregroundStyle(darkBackground ? Color.white.opacity(0.6) : Color.secondary)
+                Text(label).font(.caption).foregroundStyle(.secondary)
             }
         }.frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -249,7 +274,17 @@ struct ContentView: View {
                     Text("macOS 27").tag(IconPreset.macOS27)
                     if model.preset == .custom { Text("Custom").tag(IconPreset.custom) }
                 }
+                .labelsHidden()
                 .help("Both versions use the same measured static outline and shadow. Glass materials are already baked into your artwork.")
+            } header: {
+                HStack {
+                    Text("Preset")
+                    Spacer()
+                    Button("Reset to Defaults") { model.reset() }
+                        .buttonStyle(.borderless)
+                        .controlSize(.small)
+                        .disabled(model.settings == IconSettings())
+                }
             }
             Section("Artwork") {
                 parameter("Artwork Scale", value: $model.settings.scale, range: 30...100, unit: "%")
@@ -269,11 +304,27 @@ struct ContentView: View {
             } footer: {
                 Text("If the icon already has a shadow, set Shadow Opacity to 0.")
             }
-            Section {
-                Button("Reset to Defaults") { model.reset() }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .formStyle(.grouped)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                Divider()
+                HStack(spacing: 10) {
+                    Button { model.export(icns: false) } label: {
+                        Text("Export PNG…").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    Button { model.export(icns: true) } label: {
+                        Text("Export ICNS…").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .controlSize(.large)
+                .disabled(model.output == nil || model.busy || model.loading)
+                .padding(16)
             }
-        }.formStyle(.grouped)
+            .background(.bar)
+        }
     }
 
     private func parameter(_ title: LocalizedStringKey, value: Binding<Double>, range: ClosedRange<Double>, unit: String = "px", multiplier: Double = 1) -> some View {
@@ -284,7 +335,8 @@ struct ContentView: View {
                 Text("\(Int((value.wrappedValue * multiplier).rounded()))\(unit == "%" ? "%" : " px")")
                     .monospacedDigit().foregroundStyle(.secondary)
             }
-            Slider(value: value, in: range).controlSize(.small).accessibilityLabel(title)
+            Slider(value: value, in: range, onEditingChanged: model.setAdjusting)
+                .controlSize(.small).accessibilityLabel(title)
         }.padding(.vertical, 3)
     }
 }
