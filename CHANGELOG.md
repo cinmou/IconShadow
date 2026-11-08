@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 — 2026-11-08
+
+- Present Open and Save panels as asynchronous sheets attached to the editor, avoiding standalone app-modal dialogs that can block the editor while out of view.
+- Prevent duplicate file panels and preserve the export source and settings while choosing a destination.
+
 ## 1.1.0 — 2026-10-19
 
 - Fix preview labels and empty-state text using incorrect contrast when the canvas background differs from the system appearance.

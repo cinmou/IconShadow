@@ -45,6 +45,7 @@ final class EditorModel {
     private var loadID = UUID()
     private var renderRevision = 0
     private var isAdjusting = false
+    private var activeFilePanel: NSSavePanel?
 
     func applyPreset(_ value: IconPreset) {
         preset = value
@@ -62,7 +63,35 @@ final class EditorModel {
         panel.treatsFilePackagesAsDirectories = false
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
-        if panel.runModal() == .OK, let url = panel.url { load(url) }
+        presentFilePanel(panel) { [weak self] response in
+            if response == .OK, let url = panel.url { self?.load(url) }
+        }
+    }
+
+    /// Attach file dialogs to the editor without entering a nested application-modal
+    /// event loop from a SwiftUI button action. Keep only one panel active at a time.
+    private func presentFilePanel(_ panel: NSSavePanel,
+                                  completion: @escaping @MainActor (NSApplication.ModalResponse) -> Void) {
+        if let activeFilePanel {
+            activeFilePanel.makeKeyAndOrderFront(nil)
+            return
+        }
+        let window = NSApp.keyWindow ?? NSApp.mainWindow
+        if let sheet = window?.attachedSheet {
+            sheet.makeKeyAndOrderFront(nil)
+            return
+        }
+        activeFilePanel = panel
+        let finish: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            self?.activeFilePanel = nil
+            completion(response)
+        }
+        if let window {
+            panel.beginSheetModal(for: window, completionHandler: finish)
+        } else {
+            // A menu command may arrive before the editor has a key window.
+            panel.begin(completionHandler: finish)
+        }
     }
 
     func load(_ url: URL) {
@@ -131,13 +160,19 @@ final class EditorModel {
     }
 
     func export(icns: Bool) {
-        guard let source else { return }
+        guard let source, !busy, !loading else { return }
+        let snapshot = settings
         let panel = NSSavePanel()
         panel.allowedContentTypes = icns ? [.icns] : [.png]
         panel.nameFieldStringValue = "\(filename).\(icns ? "icns" : "png")"
         panel.canCreateDirectories = true
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        let snapshot = settings
+        presentFilePanel(panel) { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            self?.writeExport(source, settings: snapshot, to: url, icns: icns)
+        }
+    }
+
+    private func writeExport(_ source: IconSource, settings snapshot: IconSettings, to url: URL, icns: Bool) {
         busy = true
         Task {
             do {
