@@ -46,7 +46,7 @@ xcodebuild -quiet -project IconShadow.xcodeproj -scheme IconShadow \
 /usr/bin/ditto "$DERIVED_DATA/Build/Products/Release/$APP_NAME" "$APP_PATH"
 [[ "$(lipo -archs "$APP_PATH/Contents/MacOS/Icon Shadow")" == *arm64* ]] || exit 1
 [[ "$(lipo -archs "$APP_PATH/Contents/MacOS/Icon Shadow")" == *x86_64* ]] || exit 1
-codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP_PATH"
+codesign --force --options runtime --entitlements IconShadow.entitlements --timestamp --sign "$SIGN_IDENTITY" "$APP_PATH"
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 codesign -dvvv "$APP_PATH" 2> "$ARTIFACT_DIR/logs/app-signature.txt"
 

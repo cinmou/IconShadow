@@ -10,8 +10,12 @@ public enum NativeIconImporter {
     }
 
     public static func handles(_ url: URL) -> Bool {
-        url.pathExtension.lowercased() == "app" ||
-            UTType(filenameExtension: url.pathExtension.lowercased()).map { vectorTypes.contains($0) } == true
+        let ext = url.pathExtension.lowercased()
+        if ext == "app" { return true }
+        if ext == "svg" { return vectorTypes.contains(.svg) }
+        if ext == "pdf" { return vectorTypes.contains(.pdf) }
+        guard let type = UTType(filenameExtension: ext) else { return false }
+        return vectorTypes.contains { type.conforms(to: $0) }
     }
 
     public static func load(_ url: URL) throws -> IconSource {
@@ -21,9 +25,11 @@ public enum NativeIconImporter {
         let isApplication = url.pathExtension.lowercased() == "app"
         if isApplication {
             guard let bundle = Bundle(url: url),
-                  bundle.infoDictionary?["CFBundlePackageType"] as? String == "APPL",
                   let executable = bundle.executableURL,
                   FileManager.default.fileExists(atPath: executable.path) else { throw IconError.invalidImage }
+            if let packageType = bundle.infoDictionary?["CFBundlePackageType"] as? String, packageType != "APPL" {
+                throw IconError.invalidImage
+            }
             image = NSWorkspace.shared.icon(forFile: url.path)
         } else {
             guard handles(url), let decoded = NSImage(contentsOf: url) else { throw IconError.invalidImage }

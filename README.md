@@ -68,7 +68,7 @@ Run the rendering and export tests with:
 swift test
 ```
 
-The Swift package contains the rendering engine and its tests. Use the Xcode project to edit and build the application. The app uses Swift 6, SwiftUI, AppKit, Core Graphics, Core Animation and Core Image, and invokes the system `iconutil` for ICNS export.
+The Swift package contains the rendering engine and its tests. Use the Xcode project to edit and build the application. The app uses Swift 6, SwiftUI, AppKit, Core Graphics, Core Animation and Core Image, with native in-process ICNS encoding under the macOS App Sandbox.
 
 Developer ID signing, notarization and DMG packaging are documented in [Releasing](docs/Releasing.md). The editable application icon is [Artwork/IconShadow.icon](Artwork/IconShadow.icon).
 

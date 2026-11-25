@@ -167,6 +167,55 @@ final class IconPipelineTests: XCTestCase {
         XCTAssertThrowsError(try IconRenderer.render(fixture(), settings: IconSettings(), size: 0))
     }
 
+    func testInMemoryICNSAndSandboxSingleFileWriteFallback() async throws {
+        let rendered = try IconRenderer.render(fixture(), settings: IconSettings())
+        let data = try IconExporter.icnsData(rendered)
+        XCTAssertEqual(String(decoding: data.prefix(4), as: UTF8.self), "icns")
+        let source = try XCTUnwrap(CGImageSourceCreateWithData(data as CFData, nil))
+        XCTAssertEqual(CGImageSourceGetCount(source), 10)
+        var slots = Set<String>()
+        for index in 0..<CGImageSourceGetCount(source) {
+            let rep = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, index, nil))
+            let props = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any]
+            let dpi = props?[kCGImagePropertyDPIWidth] as? Int ?? 0
+            slots.insert("\(rep.width)@\(dpi)")
+        }
+        XCTAssertEqual(slots, ["16@72", "32@144", "32@72", "64@144", "128@72", "256@144", "256@72", "512@144", "512@72", "1024@144"])
+        XCTAssertEqual(NSImage(data: data)?.representations.count, 10)
+
+        // Simulate App Sandbox Powerbox single-file permission: writable target file inside a read-only directory.
+        let fm = FileManager.default
+        let dir = fm.temporaryDirectory.appendingPathComponent("IconShadow-ro-\(UUID().uuidString)")
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        let targetPNG = dir.appendingPathComponent("out.png")
+        let targetICNS = dir.appendingPathComponent("out.icns")
+        try Data().write(to: targetPNG)
+        try Data().write(to: targetICNS)
+        try fm.setAttributes([.posixPermissions: 0o555], ofItemAtPath: dir.path)
+        defer {
+            try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.path)
+            try? fm.removeItem(at: dir)
+        }
+        try IconExporter.exportPNG(rendered, to: targetPNG)
+        try IconExporter.exportICNS(rendered, to: targetICNS)
+        XCTAssertEqual(try IconRenderer.load(targetPNG).width, 1024)
+        XCTAssertEqual(try IconRenderer.load(targetICNS).width, 1024)
+
+        // Modern Xcode apps with GENERATE_INFOPLIST_FILE may omit CFBundlePackageType.
+        try await MainActor.run {
+            let mainFM = FileManager.default
+            let appDir = mainFM.temporaryDirectory.appendingPathComponent("IconShadow-app-\(UUID().uuidString).app")
+            try mainFM.createDirectory(at: appDir.appendingPathComponent("Contents/MacOS"), withIntermediateDirectories: true)
+            defer { try? mainFM.removeItem(at: appDir) }
+            let info: [String: Any] = ["CFBundleIdentifier": "dev.cinmou.MinimalApp", "CFBundleExecutable": "MinimalApp"]
+            try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+                .write(to: appDir.appendingPathComponent("Contents/Info.plist"))
+            try Data("#!/bin/sh\nexit 0\n".utf8).write(to: appDir.appendingPathComponent("Contents/MacOS/MinimalApp"))
+            let loaded = try NativeIconImporter.load(appDir)
+            XCTAssertEqual(loaded.width, 1024)
+        }
+    }
+
     func testFlatIconAndInitialShadowComparison() throws {
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("build/validation")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

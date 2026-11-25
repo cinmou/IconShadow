@@ -5,20 +5,73 @@ import UniformTypeIdentifiers
 import IconShadowCore
 #endif
 
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    var reopenMainWindow: (() -> Void)?
+    var openFileURL: ((URL) -> Void)?
+    private var pendingURL: URL?
+
+    func bind(reopen: @escaping () -> Void, openFile: @escaping (URL) -> Void) {
+        reopenMainWindow = reopen
+        openFileURL = openFile
+        if let url = pendingURL {
+            pendingURL = nil
+            reopen()
+            openFile(url)
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { reopenMainWindow?() }
+        return true
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard let url = urls.first(where: \.isFileURL) else { return }
+        if let openFileURL {
+            reopenMainWindow?()
+            openFileURL(url)
+        } else {
+            pendingURL = url
+        }
+    }
+}
+
 @main
 struct IconShadowApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.openWindow) private var openWindow
     @State private var model = EditorModel()
     var body: some Scene {
         Window("Icon Shadow", id: "main") {
             ContentView(model: model)
                 .frame(minWidth: 820, minHeight: 580)
-                .onOpenURL { model.load($0) }
+                .onOpenURL { url in
+                    guard url.isFileURL else { return }
+                    openWindow(id: "main")
+                    model.load(url)
+                }
+                .task {
+                    let openMain = openWindow
+                    let editor = model
+                    appDelegate.bind(
+                        reopen: { openMain(id: "main") },
+                        openFile: { editor.load($0) }
+                    )
+                }
         }
         .defaultSize(width: 1020, height: 720)
         .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Open…", systemImage: "folder") { model.open() }.keyboardShortcut("o")
+                Button("Open…", systemImage: "folder") {
+                    if NSApp.keyWindow == nil {
+                        openWindow(id: "main")
+                        Task { @MainActor in model.open() }
+                    } else {
+                        model.open()
+                    }
+                }.keyboardShortcut("o")
                 Button("Export ICNS…") { model.export(icns: true) }
                     .keyboardShortcut("e").disabled(model.output == nil || model.busy || model.loading)
                 Button("Export PNG…") { model.export(icns: false) }
@@ -31,11 +84,12 @@ struct IconShadowApp: App {
 
 @MainActor @Observable
 final class EditorModel {
+    private static let defaultPreset: IconPreset = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 26 ? .macOS26 : .macOS27
     var source: IconSource?
     var output: CGImage?
     var filename = ""
     var settings = IconSettings()
-    var preset: IconPreset = ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 26 ? .macOS26 : .macOS27
+    var preset: IconPreset = EditorModel.defaultPreset
     var busy = false
     var loading = false
     var rendering = false
@@ -43,6 +97,7 @@ final class EditorModel {
     var status = String(localized: "Image or App")
     private var renderTask: Task<Void, Never>?
     private var loadID = UUID()
+    private var loadingURL: URL?
     private var renderRevision = 0
     private var isAdjusting = false
     private var activeFilePanel: NSSavePanel?
@@ -53,7 +108,7 @@ final class EditorModel {
     }
 
     func reset() {
-        if preset == .custom { preset = .macOS27 }
+        if preset == .custom { preset = Self.defaultPreset }
         settings = IconSettings()
     }
 
@@ -95,7 +150,10 @@ final class EditorModel {
     }
 
     func load(_ url: URL) {
+        let standardized = url.standardizedFileURL
+        if loading, loadingURL == standardized { return }
         let id = UUID(); loadID = id
+        loadingURL = standardized
         loading = true
         Task {
             do {
@@ -110,13 +168,15 @@ final class EditorModel {
                     }.value
                 }
                 guard loadID == id else { return }
-                source = loaded; filename = url.deletingPathExtension().lastPathComponent
-                loading = false; output = nil
+                let baseName = url.deletingPathExtension().lastPathComponent
+                source = loaded; filename = baseName.isEmpty ? "Icon" : baseName
+                loading = false; loadingURL = nil; output = nil
                 status = "\(url.lastPathComponent) · \(loaded.width) × \(loaded.height)"
                 updatePreview()
             } catch {
                 guard loadID == id else { return }
-                loading = false; self.error = error.localizedDescription
+                loading = false; loadingURL = nil; self.error = error.localizedDescription
+                if source != nil, output == nil { updatePreview() }
             }
         }
     }
@@ -164,7 +224,8 @@ final class EditorModel {
         let snapshot = settings
         let panel = NSSavePanel()
         panel.allowedContentTypes = icns ? [.icns] : [.png]
-        panel.nameFieldStringValue = "\(filename).\(icns ? "icns" : "png")"
+        let exportBase = filename.isEmpty ? "Icon" : filename
+        panel.nameFieldStringValue = "\(exportBase).\(icns ? "icns" : "png")"
         panel.canCreateDirectories = true
         presentFilePanel(panel) { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
@@ -175,6 +236,8 @@ final class EditorModel {
     private func writeExport(_ source: IconSource, settings snapshot: IconSettings, to url: URL, icns: Bool) {
         busy = true
         Task {
+            let access = url.startAccessingSecurityScopedResource()
+            defer { if access { url.stopAccessingSecurityScopedResource() } }
             do {
                 try await Task.detached(priority: .userInitiated) {
                     // Render the current settings rather than a potentially older preview.
@@ -272,13 +335,11 @@ struct ContentView: View {
             if model.settings != IconSettings() { model.preset = .custom }
             model.updatePreview()
         }
-        .onDrop(of: [UTType.fileURL.identifier], isTargeted: $targeted) { providers in
-            guard let provider = providers.first else { return false }
-            _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                if let url { Task { @MainActor in model.load(url) } }
-            }
+        .dropDestination(for: URL.self) { urls, _ in
+            guard let url = urls.first(where: \.isFileURL) else { return false }
+            model.load(url)
             return true
-        }
+        } isTargeted: { targeted = $0 }
         .alert("Unable to Complete the Operation", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("OK", role: .cancel) { model.error = nil }
         } message: { Text(model.error ?? "") }

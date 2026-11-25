@@ -15,8 +15,9 @@ add('lucide-license', 'isa = PBXFileReference; lastKnownFileType = text; name = 
 add('lucide-license-build', f'isa = PBXBuildFile; fileRef = {uid("lucide-license")};')
 add('project-license', 'isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>";')
 add('project-license-build', f'isa = PBXBuildFile; fileRef = {uid("project-license")};')
+add('entitlements', 'isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IconShadow.entitlements; sourceTree = "<group>";')
 add('product','isa = PBXFileReference; explicitFileType = wrapper.application; path = "Icon Shadow.app"; sourceTree = BUILT_PRODUCTS_DIR;')
-add('group', 'isa = PBXGroup; children = (' + ','.join([uid(str(f.relative_to(root))) for f in files] + [uid('app-icon'), uid('strings'), uid('lucide-license'), uid('project-license'), uid('products')]) + '); sourceTree = "<group>";')
+add('group', 'isa = PBXGroup; children = (' + ','.join([uid(str(f.relative_to(root))) for f in files] + [uid('app-icon'), uid('strings'), uid('lucide-license'), uid('project-license'), uid('entitlements'), uid('products')]) + '); sourceTree = "<group>";')
 add('products',f'isa = PBXGroup; name = Products; children = ({uid("product")}); sourceTree = "<group>";')
 add('sources','isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ('+','.join(uid(str(f.relative_to(root))+'-build') for f in files)+'); runOnlyForDeploymentPostprocessing = 0;')
 add('frameworks','isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;')
@@ -29,7 +30,7 @@ add('resources',f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; fi
 for cfg in ['Debug','Release']:
     add('project-'+cfg, 'isa = XCBuildConfiguration; name = '+cfg+'; buildSettings = { SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 14.0; CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 6.0; SWIFT_STRICT_CONCURRENCY = complete; };')
     optimization = '-Onone' if cfg=='Debug' else '-O'
-    add('target-'+cfg, 'isa = XCBuildConfiguration; name = '+cfg+'; buildSettings = { PRODUCT_NAME = "Icon Shadow"; PRODUCT_BUNDLE_IDENTIFIER = "dev.cinmou.IconShadow"; INFOPLIST_FILE = Info.plist; ASSETCATALOG_COMPILER_APPICON_NAME = IconShadow; CODE_SIGN_STYLE = Automatic; CODE_SIGN_IDENTITY = "-"; ENABLE_APP_SANDBOX = NO; SWIFT_OPTIMIZATION_LEVEL = "'+optimization+'"; COMBINE_HIDPI_IMAGES = YES; };')
+    add('target-'+cfg, 'isa = XCBuildConfiguration; name = '+cfg+'; buildSettings = { PRODUCT_NAME = "Icon Shadow"; PRODUCT_BUNDLE_IDENTIFIER = "dev.cinmou.IconShadow"; INFOPLIST_FILE = Info.plist; CODE_SIGN_ENTITLEMENTS = IconShadow.entitlements; ASSETCATALOG_COMPILER_APPICON_NAME = IconShadow; CODE_SIGN_STYLE = Automatic; CODE_SIGN_IDENTITY = "-"; ENABLE_APP_SANDBOX = YES; SWIFT_OPTIMIZATION_LEVEL = "'+optimization+'"; COMBINE_HIDPI_IMAGES = YES; };')
 for name in ['project','target']:
     add(name+'-configs',f'isa = XCConfigurationList; buildConfigurations = ({uid(name+"-Debug")},{uid(name+"-Release")}); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;')
 add('target',f'isa = PBXNativeTarget; buildConfigurationList = {uid("target-configs")}; buildPhases = ({uid("sources")},{uid("frameworks")},{uid("resources")}); buildRules = (); dependencies = (); name = IconShadow; productName = "Icon Shadow"; productReference = {uid("product")}; productType = "com.apple.product-type.application";')

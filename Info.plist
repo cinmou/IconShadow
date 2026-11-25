@@ -13,11 +13,15 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1.1</string>
+	<string>1.1.2</string>
 	<key>CFBundleVersion</key>
-	<string>5</string>
+	<string>6</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.graphics-design</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>CFBundleDocumentTypes</key>
@@ -32,6 +36,7 @@
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.image</string>
+				<string>public.svg-image</string>
 				<string>com.adobe.pdf</string>
 				<string>com.apple.icns</string>
 			</array>

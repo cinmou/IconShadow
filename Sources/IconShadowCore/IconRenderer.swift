@@ -180,11 +180,12 @@ public enum IconRenderer {
         return result
     }
 
-    public static func pngData(_ image: CGImage) throws -> Data {
+    public static func pngData(_ image: CGImage, dpi: Int? = nil) throws -> Data {
         let data = NSMutableData()
         guard let dest = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)
         else { throw IconError.exportFailed(String(localized: "Could not encode PNG.")) }
-        CGImageDestinationAddImage(dest, image, nil)
+        let properties = dpi.map { [kCGImagePropertyDPIWidth: $0, kCGImagePropertyDPIHeight: $0] as CFDictionary }
+        CGImageDestinationAddImage(dest, image, properties)
         guard CGImageDestinationFinalize(dest) else { throw IconError.exportFailed(String(localized: "PNG encoding failed.")) }
         return data as Data
     }

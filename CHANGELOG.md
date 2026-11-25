@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2 — 2026-11-26
+
+- Enable the macOS App Sandbox with user-selected file access and native file drop handling.
+- Generate multi-resolution ICNS files directly in memory without invoking `iconutil` or temporary files, with a direct-write fallback for external volumes.
+- Fix SVG imports failing when third-party apps override the `.svg` content type, and accept valid `.app` bundles that omit `CFBundlePackageType`.
+- Reopen the main window when clicking the Dock icon or opening files while the window is closed.
+
 ## 1.1.1 — 2026-11-08
 
 - Present Open and Save panels as asynchronous sheets attached to the editor, avoiding standalone app-modal dialogs that can block the editor while out of view.

@@ -68,7 +68,7 @@ open 'build/Icon Shadow.app'
 swift test
 ```
 
-Swift Package 用于独立测试渲染引擎；编辑和构建应用请使用 Xcode 工程。应用采用 Swift 6、SwiftUI、AppKit、Core Graphics、Core Animation 和 Core Image，通过系统 `iconutil` 导出 ICNS。
+Swift Package 用于独立测试渲染引擎；编辑和构建应用请使用 Xcode 工程。应用运行在 macOS App Sandbox 沙盒下，采用 Swift 6、SwiftUI、AppKit、Core Graphics、Core Animation 和 Core Image，并在进程内原生生成 ICNS。
 
 Developer ID 签名、公证和 DMG 打包流程见[发布说明](docs/Releasing.md)。应用图标源文件为 [Artwork/IconShadow.icon](Artwork/IconShadow.icon)，可用 Icon Composer 编辑。
 
