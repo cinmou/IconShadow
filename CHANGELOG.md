@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 — 2026-11-28
+
+- Add Folder Icon mode: generate custom macOS folder icons from any dropped image, `.app` bundle, or built-in SF Symbol (with search and custom symbol name input).
+- Support both full-color App Logo badges and native 3-layer Embossed folder glyphs, including an adjustable Threshold slider that cleanly strips exterior shadows and rounded plate borders from `.app` icons.
+- Support System Default, 9 macOS folder color presets (Sky Blue, Blue, Purple, Pink, Red, Orange, Yellow, Green, Graphite), and a custom Color Picker, plus an optional Paper Sheet toggle matching non-empty macOS folders.
+- Add one-click Apply to Folder… (`⇧⌘A`) in Folder mode to set multi-resolution icons directly on any user-selected folder inside the App Sandbox.
+- Refine the toolbar and inspector following macOS HIG: centered mode switcher, compact icon-only toolbar controls, Auto/Light/Dark preview background cycling, and concise labels.
+- Introduce a redesigned mint-teal Liquid Glass `.icon` application icon.
+
 ## 1.1.2 — 2026-11-26
 
 - Enable the macOS App Sandbox with user-selected file access and native file drop handling.

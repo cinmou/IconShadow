@@ -2,6 +2,8 @@
 { archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
 FB836F05E5124ABC47FA70C3 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/IconShadow/IconShadowApp.swift"; sourceTree = "<group>"; };
 2B572F22B56E67695B8086D4 = { isa = PBXBuildFile; fileRef = FB836F05E5124ABC47FA70C3; };
+8397B802FDF76D6F781EFB99 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/IconShadowCore/FolderIconRenderer.swift"; sourceTree = "<group>"; };
+0246E98E3E998A01566BBFF6 = { isa = PBXBuildFile; fileRef = 8397B802FDF76D6F781EFB99; };
 135194D643B04195A0EB1299 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/IconShadowCore/IconExporter.swift"; sourceTree = "<group>"; };
 E44ECB53C950571B4A040D35 = { isa = PBXBuildFile; fileRef = 135194D643B04195A0EB1299; };
 3BF4F70ECE0A6E42B295AFF2 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/IconShadowCore/IconRenderer.swift"; sourceTree = "<group>"; };
@@ -16,9 +18,9 @@ F374A74DFF77123A5309C519 = { isa = PBXBuildFile; fileRef = 6115963FDF2E5F17EAAC9
 87A7393B581F9A3D7948CFA4 = { isa = PBXBuildFile; fileRef = 8475CA1D9950C41F9DBD6CD5; };
 E7B1BFA482251F04722B6837 = { isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IconShadow.entitlements; sourceTree = "<group>"; };
 38A007151ABE87CC01A5B6E9 = { isa = PBXFileReference; explicitFileType = wrapper.application; path = "Icon Shadow.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-64292B1C2B2E13EAD8788FC8 = { isa = PBXGroup; children = (FB836F05E5124ABC47FA70C3,135194D643B04195A0EB1299,3BF4F70ECE0A6E42B295AFF2,4D5E0CBF4EAB5C409B4E2160,8B53A5A73310766E670AEEAE,1877F3CB6E58176272997A08,6115963FDF2E5F17EAAC9A84,8475CA1D9950C41F9DBD6CD5,E7B1BFA482251F04722B6837,FBDC4F23F93125BBEEAE800C); sourceTree = "<group>"; };
+64292B1C2B2E13EAD8788FC8 = { isa = PBXGroup; children = (FB836F05E5124ABC47FA70C3,8397B802FDF76D6F781EFB99,135194D643B04195A0EB1299,3BF4F70ECE0A6E42B295AFF2,4D5E0CBF4EAB5C409B4E2160,8B53A5A73310766E670AEEAE,1877F3CB6E58176272997A08,6115963FDF2E5F17EAAC9A84,8475CA1D9950C41F9DBD6CD5,E7B1BFA482251F04722B6837,FBDC4F23F93125BBEEAE800C); sourceTree = "<group>"; };
 FBDC4F23F93125BBEEAE800C = { isa = PBXGroup; name = Products; children = (38A007151ABE87CC01A5B6E9); sourceTree = "<group>"; };
-BCE16DD0260827ECF338C787 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (2B572F22B56E67695B8086D4,E44ECB53C950571B4A040D35,B31DA8D982A44974E06AC05A,48A1E4711E13CD3F0BB95053); runOnlyForDeploymentPostprocessing = 0; };
+BCE16DD0260827ECF338C787 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (2B572F22B56E67695B8086D4,0246E98E3E998A01566BBFF6,E44ECB53C950571B4A040D35,B31DA8D982A44974E06AC05A,48A1E4711E13CD3F0BB95053); runOnlyForDeploymentPostprocessing = 0; };
 7561BFB015D8F536760CB671 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 792B43B074E6975FFAF20126 = { isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "Sources/IconShadow/Resources/en.lproj/Localizable.strings"; sourceTree = "<group>"; };
 408FA2295455B7FC181566B5 = { isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Sources/IconShadow/Resources/zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };

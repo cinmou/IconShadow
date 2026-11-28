@@ -13,15 +13,13 @@ Drop in an image or a macOS application, adjust the icon’s size and shadow, an
 
 ## Features
 
-- Import images or extract an application’s icon by dropping its `.app` bundle, or using the file picker.
+- **App Icon mode:** Add calibrated macOS drop shadows, continuous-corner masking, and automatic transparent-edge trimming to images or `.app` icons.
+- **Folder Icon mode:** Create custom macOS folder icons with full-color **App Logo** badges or native 3-layer **Embossed** glyphs from any image, `.app`, or built-in SF Symbol.
+- **Folder colors & paper sheet:** System Default, 9 macOS presets, custom Color Picker, and an optional white paper sheet matching non-empty macOS folders.
+- **Apply to Folder… (`⇧⌘A`):** Apply generated multi-resolution icons directly to any folder via the native folder picker, or export 1024 × 1024 PNG and multi-resolution ICNS.
 - Native image decoding: PNG, ICNS, JPEG, TIFF, HEIC, GIF, BMP, ICO, WebP and other Image I/O formats supported by your macOS version, plus native SVG/PDF rasterization.
-- Automatic transparent-edge trimming and proportional artwork scaling, measuring the body separately from faint exterior shadows.
-- Continuous-corner mask and alpha-based Gaussian shadow.
-- Live controls for scale, horizontal/vertical position, shadow opacity, blur and offset.
-- Original/processed comparison, with light and dark preview backgrounds.
-- 1024 × 1024 PNG and multi-resolution ICNS export.
-- macOS 26 and macOS 27 presets.
-- English and Simplified Chinese, following the system's application language.
+- Original/processed comparison, with Auto / Light / Dark preview backgrounds.
+- macOS 26 and macOS 27 presets, plus English and Simplified Chinese localization.
 
 ## Requirements
 
@@ -81,8 +79,7 @@ Issues and pull requests are welcome. For rendering problems, include the input 
 - [macOSicons Icon Toolkit](https://macosicons.com/editor/toolkit) for the workflow reference.
 - [macicon](https://github.com/DarkRader/macicon) for the packaging reference.
 - [iccir's macOS icon templates](https://gist.github.com/iccir/053ebec1ad3a53fad3dbfbf76743ea94) for the original rendering measurements.
-- [Lucide](https://lucide.dev/) for the application-window symbol used in the logo, under the [ISC license](Artwork/ThirdParty/Lucide-LICENSE.txt).
 
 ## License
 
-[MIT](LICENSE). Third-party artwork retains its own license as noted above.
+[MIT](LICENSE).

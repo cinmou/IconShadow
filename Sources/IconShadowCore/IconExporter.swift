@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import AppKit
 
 public enum IconExporter {
     private static let icnsSlots: [(type: String, points: Int, scale: Int)] = [
@@ -49,6 +50,18 @@ public enum IconExporter {
 
     public static func exportICNS(_ image: CGImage, to url: URL) throws {
         try write(icnsData(image), to: url)
+    }
+
+    @MainActor
+    public static func applyToFolder(_ image: CGImage, folderURL: URL) throws {
+        let access = folderURL.startAccessingSecurityScopedResource()
+        defer { if access { folderURL.stopAccessingSecurityScopedResource() } }
+        let data = try icnsData(image)
+        guard let nsImage = NSImage(data: data) else { throw IconError.renderingFailed }
+        guard NSWorkspace.shared.setIcon(nsImage, forFile: folderURL.path, options: []) else {
+            throw IconError.applyFailed
+        }
+        NSWorkspace.shared.noteFileSystemChanged(folderURL.path)
     }
 
     private static func write(_ data: Data, to url: URL) throws {

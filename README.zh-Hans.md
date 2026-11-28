@@ -13,15 +13,13 @@
 
 ## 功能
 
-- 拖入 `.app` 或通过文件选择器打开应用，直接提取它的图标。
+- **应用图标模式**：拖入图片或 `.app`，自动裁切透明边距、按主体比例缩放、应用连续圆角遮罩并添加校准过的 macOS 原生高斯阴影。
+- **文件夹图标模式**：拖入图片、`.app` 或选用系统内置 SF Symbols（支持搜索与直接输入符号名），一键生成彩色**应用徽标**或三层物理**原生浮雕**文件夹图标（含可调抠图阈值）。
+- **文件夹颜色与内衬纸页**：支持系统默认、9 种预设色、自定义取色器，以及空文件夹 / 有文件（内衬白纸）外观切换。
+- **一键应用与导出**：在文件夹模式下可直接点击**应用到文件夹…**（`⇧⌘A`）写入目标文件夹，也可随时导出 1024 × 1024 PNG 与多分辨率 ICNS。
 - 使用系统解码器导入 PNG、ICNS、JPEG、TIFF、HEIC、GIF、BMP、ICO、WebP 等图片，并支持 SVG、PDF 原生栅格化。
-- 自动裁切透明边距，按主体识别尺寸，避免把外围淡阴影计入缩放；保持图稿原始比例。
-- 连续圆角遮罩，以及按透明轮廓生成的高斯阴影。
-- 实时调整缩放、水平和垂直位置、阴影透明度、模糊和偏移。
-- 原图与处理结果对比，支持浅色、深色预览背景。
-- 导出 1024 × 1024 PNG，以及包含多分辨率资源的 ICNS。
-- macOS 26、macOS 27 预设。
-- 简体中文和英文，跟随系统的应用语言设置。
+- 原图与处理结果对比，支持自动 / 浅色 / 深色预览背景。
+- macOS 26、macOS 27 预设，简体中文与英文跟随系统语言。
 
 ## 系统要求
 
@@ -81,8 +79,7 @@ Developer ID 签名、公证和 DMG 打包流程见[发布说明](docs/Releasing
 - [macOSicons Icon Toolkit](https://macosicons.com/editor/toolkit)：工作流程参考。
 - [macicon](https://github.com/DarkRader/macicon)：图标打包参考。
 - [iccir 的 macOS 图标模板](https://gist.github.com/iccir/053ebec1ad3a53fad3dbfbf76743ea94)：原始渲染测量参考。
-- [Lucide](https://lucide.dev/)：Logo 中的应用窗口符号，遵循 [ISC 许可证](Artwork/ThirdParty/Lucide-LICENSE.txt)。
 
 ## 许可证
 
-[MIT](LICENSE)。第三方素材保留各自的许可证。
+[MIT](LICENSE)。

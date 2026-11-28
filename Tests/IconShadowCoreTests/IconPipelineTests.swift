@@ -281,4 +281,102 @@ final class IconPipelineTests: XCTestCase {
         }
         try report.write(to: root.appendingPathComponent("report.txt"), atomically: true, encoding: .utf8)
     }
+
+    func testFolderIconRenderingColorsEmbossAndApply() async throws {
+        let (base, hammer, swiftSym, calcApp) = try await MainActor.run {
+            let base = try FolderIconRenderer.prepareSystemFolderBase()
+            let hammer = try FolderIconRenderer.loadSymbol("hammer.fill")
+            let swiftSym = try FolderIconRenderer.loadSymbol("swift")
+            XCTAssertTrue(FolderIconRenderer.isValidSymbol("hammer.fill"))
+            XCTAssertFalse(FolderIconRenderer.isValidSymbol("definitely.not.a.real.symbol.xyz"))
+            let calc = try NativeIconImporter.load(URL(fileURLWithPath: "/System/Applications/Calculator.app"))
+            return (base, hammer, swiftSym, calc)
+        }
+        XCTAssertGreaterThan(base.pocketTopY, 220)
+        XCTAssertLessThan(base.pocketTopY, 320)
+        XCTAssertGreaterThan(base.opticalCenterY, 520)
+        XCTAssertLessThan(base.opticalCenterY, 610)
+
+        // Render contact sheet of empty vs non-empty (paper sheet) + all presets + App Logo + Embossed.
+        let presets: [(FolderColorPreset, IconSource?, FolderStyle, Bool)] = [
+            (.systemDefault, hammer, .embossed, false),
+            (.systemDefault, hammer, .embossed, true),
+            (.blue, hammer, .embossed, true),
+            (.purple, swiftSym, .embossed, true),
+            (.pink, hammer, .embossed, true),
+            (.red, hammer, .embossed, true),
+            (.orange, hammer, .embossed, false),
+            (.yellow, hammer, .embossed, true),
+            (.green, hammer, .embossed, true),
+            (.graphite, hammer, .embossed, true),
+            (.systemDefault, calcApp, .appLogo, false),
+            (.systemDefault, calcApp, .appLogo, true),
+            (.blue, calcApp, .appLogo, true),
+            (.skyBlue, calcApp, .embossed, true),
+            (.custom, swiftSym, .embossed, true),
+        ]
+
+        let cols = 5, rows = 3, tile = 256
+        guard let sheetCtx = CGContext(
+            data: nil, width: cols * tile, height: rows * tile, bitsPerComponent: 8,
+            bytesPerRow: cols * tile * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        ) else { XCTFail("Could not create sheet context"); return }
+        sheetCtx.setFillColor(CGColor(gray: 0.94, alpha: 1))
+        sheetCtx.fill(CGRect(x: 0, y: 0, width: cols * tile, height: rows * tile))
+
+        var firstRendered: CGImage?
+        var emptySample: CGImage?
+        var fullSample: CGImage?
+        for (idx, item) in presets.enumerated() {
+            var s = FolderSettings()
+            s.colorPreset = item.0
+            s.style = item.2
+            s.hasFiles = item.3
+            let img = try FolderIconRenderer.render(source: item.1, base: base, settings: s, size: 1024)
+            XCTAssertEqual(img.width, 1024)
+            XCTAssertEqual(img.height, 1024)
+            if firstRendered == nil { firstRendered = img }
+            if idx == 0 { emptySample = img }
+            if idx == 1 { fullSample = img }
+            let col = idx % cols
+            let row = rows - 1 - (idx / cols)
+            sheetCtx.draw(img, in: CGRect(x: col * tile, y: row * tile, width: tile, height: tile))
+        }
+
+        // Verify the white paper sheet actually renders bright white in the pocket peek slot (x=512, y=248).
+        let emptyBytes = try XCTUnwrap(emptySample?.dataProvider?.data) as Data
+        let fullBytes = try XCTUnwrap(fullSample?.dataProvider?.data) as Data
+        let probeY = max(180, Int(base.pocketTopY) - 20)
+        let offset = probeY * 1024 * 4 + 512 * 4
+        XCTAssertGreaterThan(fullBytes[offset], emptyBytes[offset] + 80)
+        XCTAssertGreaterThan(fullBytes[offset], 235)
+        XCTAssertGreaterThan(fullBytes[offset + 1], 235)
+        XCTAssertGreaterThan(fullBytes[offset + 2], 235)
+
+        // Verify opaque .app emboss cleanly strips exterior shadow & rounded plate border, leaving only inner glyph.
+        let calcMask = try FolderIconRenderer.embossSilhouette(from: calcApp, threshold: 0.40)
+        let calcMaskBounds = try IconRenderer.alphaBounds(calcMask, threshold: 48)
+        XCTAssertLessThan(calcMaskBounds.width, calcApp.artworkBounds.width * 0.78)
+        XCTAssertGreaterThan(calcMaskBounds.width, calcApp.artworkBounds.width * 0.30)
+
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("build/validation")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        if let sheet = sheetCtx.makeImage() {
+            try IconExporter.exportPNG(sheet, to: root.appendingPathComponent("folder-contact-sheet.png"))
+        }
+
+        // Verify applying the rendered folder icon to a disposable temp folder persists its custom icon resource.
+        let renderedFolder = try XCTUnwrap(firstRendered)
+        try await MainActor.run {
+            let fm = FileManager.default
+            let targetDir = fm.temporaryDirectory.appendingPathComponent("IconShadow-folder-\(UUID().uuidString)")
+            try fm.createDirectory(at: targetDir, withIntermediateDirectories: true)
+            defer { try? fm.removeItem(at: targetDir) }
+            try IconExporter.applyToFolder(renderedFolder, folderURL: targetDir)
+            let fork = targetDir.appendingPathComponent("Icon\r/..namedfork/rsrc")
+            let data = try Data(contentsOf: fork)
+            XCTAssertFalse(data.isEmpty)
+        }
+    }
 }

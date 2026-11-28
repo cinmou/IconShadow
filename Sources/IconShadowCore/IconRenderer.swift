@@ -6,7 +6,7 @@ import QuartzCore
 import CoreImage
 
 public enum IconError: LocalizedError {
-    case invalidImage, emptyImage, oversizedImage, renderingFailed, exportFailed(String)
+    case invalidImage, emptyImage, oversizedImage, renderingFailed, exportFailed(String), applyFailed
     public var errorDescription: String? {
         switch self {
         case .invalidImage: String(localized: "Choose a supported image or macOS application.")
@@ -14,6 +14,7 @@ public enum IconError: LocalizedError {
         case .oversizedImage: String(localized: "Use an image no larger than 8192 × 8192 pixels.")
         case .renderingFailed: String(localized: "Could not create the icon canvas.")
         case .exportFailed(let message): String(format: String(localized: "Export failed: %@"), message)
+        case .applyFailed: String(localized: "Could not apply the icon to this folder. Check folder permissions.")
         }
     }
 }
@@ -134,7 +135,7 @@ public enum IconRenderer {
     }
 
     // CIContext is thread-safe and reused across preview/export jobs.
-    private static let ciContext = CIContext(options: [.workingColorSpace: CGColorSpace(name: CGColorSpace.sRGB)!])
+    static let ciContext = CIContext(options: [.workingColorSpace: CGColorSpace(name: CGColorSpace.sRGB)!])
 
     public static func render(_ source: IconSource, settings: IconSettings, size: Int = 1024) throws -> CGImage {
         guard size > 0, size <= 4096 else { throw IconError.renderingFailed }
